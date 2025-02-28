@@ -1,0 +1,106 @@
+PARSER_BEGIN(TriangleParser)
+import java.io.*;
+public class TriangleParser {
+    public static void main(String args[]) throws ParseException {
+         TriangleParser parser = new TriangleParser(System.in);
+         parser.Input();
+    }
+    
+    // Sonucu ekrana yazdirmak icin yardimci metot.
+    public static void printResult(String result) {
+         System.out.println(result);
+    }
+    
+    // SSS durumu: Üc kenar verildiginde acilari hesaplama.
+    public static void computeSSS(double a, double b, double c) {
+         double A = Math.toDegrees(Math.acos((b*b + c*c - a*a) / (2 * b * c)));
+         double B = Math.toDegrees(Math.acos((a*a + c*c - b*b) / (2 * a * c)));
+         double C = 180.0 - A - B;
+         printResult("SSS: Verilen kenarlar a=" + a + ", b=" + b + ", c=" + c +
+                     " icin acilar: A=" + A + " derece, B=" + B + " derece, C=" + C + " derece");
+    }
+    
+    // SAS durumu: İki kenar ve aradaki aci verildiginde, ücüncü kenari ve diger acilari hesaplama.
+    // Girdi formati: side1, includedAngle, side2
+    public static void computeSAS(double a, double angleC, double b) {
+         double C = angleC; // Verilen aci, derece cinsinden.
+         double radC = Math.toRadians(C);
+         double c = Math.sqrt(a*a + b*b - 2*a*b*Math.cos(radC));
+         double A = Math.toDegrees(Math.asin(a * Math.sin(radC) / c));
+         double B = 180.0 - C - A;
+         printResult("SAS: Verilen kenarlar a=" + a + ", b=" + b + " ve aradaki aci C=" + C +
+                     " derece icin; hesaplanan kenar c=" + c +
+                     " ve acilar: A=" + A + " derece, B=" + B + " derece, C=" + C + " derece");
+    }
+    
+    // ASA durumu: İki aci ve aradaki kenar verildiginde, ücüncü aciyi ve diger kenarlari hesaplama.
+    // Girdi formati: angleA, side (aradaki kenar), angleC
+    public static void computeASA(double angleA, double sideB, double angleC) {
+         double A = angleA;
+         double C = angleC;
+         double B = 180.0 - A - C;
+         double a = sideB * Math.sin(Math.toRadians(A)) / Math.sin(Math.toRadians(B));
+         double c = sideB * Math.sin(Math.toRadians(C)) / Math.sin(Math.toRadians(B));
+         printResult("ASA: Verilen aci A=" + A + " derece, C=" + C +
+                     " derece ve aradaki kenar b=" + sideB +
+                     " icin; hesaplanan aci B=" + B +
+                     " derece ve kenarlar: a=" + a + ", b=" + sideB + ", c=" + c);
+    }
+    
+    // AAS durumu: İki aci ve, bu acilardan birine karsilik gelen kenar verildiginde diger aci ve kenarlari hesaplama.
+    // Girdi formati: angleA, angleB, sideA (sideA, angleA'ya karsilik gelir)
+    public static void computeAAS(double angleA, double angleB, double sideA) {
+         double A = angleA;
+         double B = angleB;
+         double C = 180.0 - A - B;
+         double a = sideA;
+         double b = a * Math.sin(Math.toRadians(B)) / Math.sin(Math.toRadians(A));
+         double c = a * Math.sin(Math.toRadians(C)) / Math.sin(Math.toRadians(A));
+         printResult("AAS: Verilen aci A=" + A + " derece, B=" + B +
+                     " derece ve karsi kenar a=" + a +
+                     " icin; hesaplanan aci C=" + C +
+                     " derece ve kenarlar: a=" + a + ", b=" + b + ", c=" + c);
+    }
+}
+PARSER_END(TriangleParser)
+
+SKIP : { " " | "\t" | "\n" | "\r" }
+
+TOKEN : { < NUMBER: (["0"-"9"])+ ( "." (["0"-"9"])+ )? > }
+TOKEN : { < COMMA: "," > }
+TOKEN : { < LPAREN: "(" > }
+TOKEN : { < RPAREN: ")" > }
+TOKEN : { < TRIANGLE: "Triangle" > }
+TOKEN : { < TYPE: "SSS" | "SAS" | "ASA" | "AAS" > }
+
+void Input() :
+{}
+{
+    Triangle() <EOF>
+}
+
+void Triangle() :
+{
+   Token typeToken;
+   Token n1, n2, n3;
+}
+{
+    <TRIANGLE> typeToken=<TYPE> <LPAREN> n1=<NUMBER> <COMMA> n2=<NUMBER> <COMMA> n3=<NUMBER> <RPAREN>
+    {
+         String type = typeToken.image;
+         double param1 = Double.parseDouble(n1.image);
+         double param2 = Double.parseDouble(n2.image);
+         double param3 = Double.parseDouble(n3.image);
+         if(type.equals("SSS")) {
+             computeSSS(param1, param2, param3);
+         } else if(type.equals("SAS")) {
+             computeSAS(param1, param2, param3);
+         } else if(type.equals("ASA")) {
+             computeASA(param1, param2, param3);
+         } else if(type.equals("AAS")) {
+             computeAAS(param1, param2, param3);
+         } else {
+             printResult("Desteklenmeyen ücgen tipi: " + type);
+         }
+    }
+}
